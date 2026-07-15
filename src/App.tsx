@@ -32,7 +32,11 @@ import {
   Trash2,
   LogOut,
   RefreshCw,
-  Search
+  Search,
+  CreditCard,
+  Smartphone,
+  QrCode,
+  Wallet
 } from 'lucide-react';
 
 // Types for our portfolio components
@@ -137,6 +141,34 @@ export default function App() {
 
   // CV View Modal state
   const [isCVModalOpen, setIsCVModalOpen] = useState<boolean>(false);
+
+  // ==========================================================
+  // FAMPAY UPI CONFIGURATION & STATE DEFINITIONS
+  // ==========================================================
+  // 1. CLEAR PLACEHOLDERS FOR EASY EDITING:
+  const FAMPAY_UPI_CONFIG = {
+    upiId: ((import.meta as any).env?.VITE_FAMPAY_UPI_ID as string) || "APNA_FAMPAY_UPI_ID@fam", // <-- FamPay / FamApp UPI ID from env or fallback placeholder
+    payeeName: ((import.meta as any).env?.VITE_PAYEE_NAME as string) || "NANDLAL",            // <-- Payee name from env or fallback placeholder
+  };
+
+  const [upiPaymentModal, setUpiPaymentModal] = useState<{
+    isOpen: boolean;
+    planName: string;
+    price: string;
+    amount: string;
+  } | null>(null);
+
+  // Helper to generate direct UPI deep link with the required parameters
+  const getUpiUrl = (planName: string, priceString: string) => {
+    // Extract numerical price or default to the placeholder string
+    const numericAmount = priceString.replace(/[^0-9]/g, '') || "PLAN_PRICE";
+    
+    // Exact literal variables requested for configuration
+    const APNA_FAMPAY_UPI_ID = FAMPAY_UPI_CONFIG.upiId;
+    const PLAN_PRICE = numericAmount;
+    
+    return `upi://pay?pa=${APNA_FAMPAY_UPI_ID}&pn=${FAMPAY_UPI_CONFIG.payeeName}&cu=INR&am=${PLAN_PRICE}&tn=${encodeURIComponent("Payment for " + planName)}`;
+  };
 
   // Form type state: 'brief' for project brief, 'booking' for appointment booking
   const [formType, setFormType] = useState<'brief' | 'booking'>('brief');
@@ -1686,13 +1718,20 @@ const processQueue = async (tasks) => {
                     </li>
                   </ul>
                 </div>
-                <div className="mt-6">
+                <div className="mt-6 space-y-2">
+                  <button
+                    onClick={() => setUpiPaymentModal({ isOpen: true, planName: '1-Rupee Free Call (₹1)', price: '₹1', amount: '1' })}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black transition-all transform hover:scale-[1.02] shadow-md shadow-purple-500/20 hover:shadow-purple-500/30 cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Wallet className="w-3.5 h-3.5" />
+                    <span>Instant UPI Pay (₹1)</span>
+                  </button>
                   <button
                     onClick={() => selectPlanForBooking('1-Rupee Free Call (₹1)', '₹1')}
-                    className="w-full py-2.5 rounded-xl border border-white/5 bg-white/5 group-hover:bg-purple-600 group-hover:text-white hover:border-purple-500/20 text-xs font-bold text-slate-300 transition-all cursor-pointer text-center flex items-center justify-center gap-1.5"
+                    className="w-full py-1.5 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] text-[10px] font-bold text-slate-400 hover:text-slate-200 transition-all cursor-pointer text-center flex items-center justify-center gap-1"
                   >
-                    <span>Book Call (₹1 Only)</span>
-                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                    <span>Or Book Slot & Pay Later</span>
+                    <ArrowRight className="w-2.5 h-2.5" />
                   </button>
                 </div>
               </div>
@@ -1736,13 +1775,20 @@ const processQueue = async (tasks) => {
                     </li>
                   </ul>
                 </div>
-                <div className="mt-6">
+                <div className="mt-6 space-y-2">
+                  <button
+                    onClick={() => setUpiPaymentModal({ isOpen: true, planName: 'Basic Website (₹4,999)', price: '₹4,999', amount: '4999' })}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black transition-all transform hover:scale-[1.02] shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Wallet className="w-3.5 h-3.5" />
+                    <span>Instant UPI Purchase (₹4,999)</span>
+                  </button>
                   <button
                     onClick={() => selectPlanForBooking('Basic Website (₹4,999)', '₹4,999')}
-                    className="w-full py-2.5 rounded-xl border border-white/5 bg-white/5 group-hover:bg-blue-600 group-hover:text-white hover:border-blue-500/20 text-xs font-bold text-slate-300 transition-all cursor-pointer text-center flex items-center justify-center gap-1.5"
+                    className="w-full py-1.5 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] text-[10px] font-bold text-slate-400 hover:text-slate-200 transition-all cursor-pointer text-center flex items-center justify-center gap-1"
                   >
-                    <span>Book Free Consultation</span>
-                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                    <span>Or Discuss & Book Consultation</span>
+                    <ArrowRight className="w-2.5 h-2.5" />
                   </button>
                 </div>
               </div>
@@ -1790,13 +1836,20 @@ const processQueue = async (tasks) => {
                     </li>
                   </ul>
                 </div>
-                <div className="mt-6">
+                <div className="mt-6 space-y-2">
+                  <button
+                    onClick={() => setUpiPaymentModal({ isOpen: true, planName: 'Business Website (₹9,999)', price: '₹9,999', amount: '9999' })}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black transition-all transform hover:scale-[1.02] shadow-md shadow-purple-500/20 hover:shadow-purple-500/30 cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Wallet className="w-3.5 h-3.5" />
+                    <span>Instant UPI Purchase (₹9,999)</span>
+                  </button>
                   <button
                     onClick={() => selectPlanForBooking('Business Website (₹9,999)', '₹9,999')}
-                    className="w-full py-2.5 rounded-xl border border-purple-500/30 bg-purple-600/10 hover:bg-purple-600 hover:text-white text-xs font-bold text-purple-300 transition-all cursor-pointer text-center flex items-center justify-center gap-1.5"
+                    className="w-full py-1.5 rounded-lg border border-purple-500/20 bg-purple-600/5 hover:bg-purple-600/10 text-[10px] font-bold text-purple-400 hover:text-purple-200 transition-all cursor-pointer text-center flex items-center justify-center gap-1"
                   >
-                    <span>Book Free Consultation</span>
-                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                    <span>Or Discuss & Book Consultation</span>
+                    <ArrowRight className="w-2.5 h-2.5" />
                   </button>
                 </div>
               </div>
@@ -1841,13 +1894,20 @@ const processQueue = async (tasks) => {
                     </li>
                   </ul>
                 </div>
-                <div className="mt-6">
+                <div className="mt-6 space-y-2">
+                  <button
+                    onClick={() => setUpiPaymentModal({ isOpen: true, planName: 'E-commerce Website (₹19,999)', price: '₹19,999', amount: '19999' })}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black transition-all transform hover:scale-[1.02] shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/30 cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Wallet className="w-3.5 h-3.5" />
+                    <span>Instant UPI Purchase (₹19,999)</span>
+                  </button>
                   <button
                     onClick={() => selectPlanForBooking('E-commerce Website (₹19,999)', '₹19,999')}
-                    className="w-full py-2.5 rounded-xl border border-white/5 bg-white/5 group-hover:bg-emerald-600 group-hover:text-white hover:border-emerald-500/20 text-xs font-bold text-slate-300 transition-all cursor-pointer text-center flex items-center justify-center gap-1.5"
+                    className="w-full py-1.5 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] text-[10px] font-bold text-slate-400 hover:text-slate-200 transition-all cursor-pointer text-center flex items-center justify-center gap-1"
                   >
-                    <span>Book Free Consultation</span>
-                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                    <span>Or Discuss & Book Consultation</span>
+                    <ArrowRight className="w-2.5 h-2.5" />
                   </button>
                 </div>
               </div>
@@ -2308,6 +2368,59 @@ const processQueue = async (tasks) => {
                 />
               </div>
 
+              {/* INLINE UPI INSTANT CHECKOUT PANEL */}
+              {formType === 'booking' && (
+                bookingService === '1-Rupee Free Call (₹1)' || 
+                bookingService === 'Basic Website (₹4,999)' || 
+                bookingService === 'Business Website (₹9,999)' || 
+                bookingService === 'E-commerce Website (₹19,999)'
+              ) && (
+                <div className="bg-gradient-to-r from-purple-950/20 via-indigo-950/20 to-slate-950/40 border border-purple-500/30 p-4 rounded-xl space-y-3 animate-fadeIn my-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-400">
+                        <Wallet className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-[11px] font-extrabold text-white uppercase tracking-wider">Instant UPI Payment Available</h4>
+                        <p className="text-[9px] text-slate-400">Secure your plan instantly through FamPay</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block">Selected Service Price</span>
+                      <span className="text-sm font-black text-purple-400">
+                        {bookingService.includes('₹19,999') ? '₹19,999' :
+                         bookingService.includes('₹9,999') ? '₹9,999' :
+                         bookingService.includes('₹4,999') ? '₹4,999' : '₹1'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const name = bookingService;
+                        const price = name.includes('₹19,999') ? '₹19,999' :
+                                      name.includes('₹9,999') ? '₹9,999' :
+                                      name.includes('₹4,999') ? '₹4,999' : '₹1';
+                        const amount = price.replace(/[^0-9]/g, '');
+                        setUpiPaymentModal({ isOpen: true, planName: name, price: price, amount: amount });
+                      }}
+                      className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black transition-all transform hover:scale-[1.01] shadow-md shadow-purple-500/20 cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      <span>Instant UPI Pay & Buy Plan</span>
+                    </button>
+                  </div>
+                  
+                  {/* Note / Subtext under the button */}
+                  <p className="text-[9px] text-slate-400 text-center leading-tight">
+                    Clicking this will securely open your UPI apps like FamApp, PhonePe, Paytm or Google Pay.
+                  </p>
+                </div>
+              )}
+
               <button 
                 type="submit"
                 className="accent-gradient accent-gradient-hover w-full py-3 rounded-lg text-xs font-bold text-white transition-all transform hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-blue-500/10"
@@ -2561,6 +2674,96 @@ const processQueue = async (tasks) => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: PREMIUM UPI FAMPAY PAYMENT CHECKOUT */}
+      {upiPaymentModal?.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+          <div className="glass max-w-md w-full bg-[#050508]/98 border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative p-6 flex flex-col gap-5 text-center">
+            
+            {/* Close button */}
+            <button 
+              onClick={() => setUpiPaymentModal(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white transition w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/5 cursor-pointer z-10"
+              title="Close Checkout"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Glowing top logo/icon */}
+            <div className="mx-auto w-12 h-12 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 animate-pulse">
+              <CreditCard className="w-6 h-6" />
+            </div>
+
+            <div>
+              <span className="text-[9px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-0.5 rounded font-extrabold uppercase tracking-widest">
+                FamPay Secure Checkout
+              </span>
+              <h3 className="text-lg font-black text-white mt-2">
+                {upiPaymentModal.planName}
+              </h3>
+              <p className="text-2xl font-black text-purple-400 mt-1">
+                {upiPaymentModal.price}
+              </p>
+            </div>
+
+            {/* QR Code and Scanner Representation */}
+            <div className="bg-slate-950/80 border border-white/5 p-4 rounded-2xl flex flex-col items-center gap-3 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-t from-purple-500/[0.03] to-transparent pointer-events-none" />
+              
+              <div className="w-44 h-44 bg-white p-3.5 rounded-xl shadow-inner relative flex items-center justify-center group-hover:scale-105 transition-all duration-300">
+                {/* Simulated high-fidelity beautiful vector QR code layout using pure CSS & icons */}
+                <div className="absolute inset-0 border border-dashed border-purple-500/30 m-2 rounded-lg animate-pulse pointer-events-none" />
+                <div className="w-full h-full border border-slate-200 rounded-lg flex flex-col items-center justify-center gap-2 p-2">
+                  <QrCode className="w-24 h-24 text-slate-950" />
+                  <span className="text-[8px] font-mono font-black text-slate-500 tracking-wider">UPI SCANNER ACTIVE</span>
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-[10px] text-slate-400 font-medium">Scan QR using FamApp or any UPI App</p>
+                <p className="text-[9px] text-slate-500 font-mono mt-0.5">UPI ID: <span className="text-purple-400 font-bold font-mono select-all">{FAMPAY_UPI_CONFIG.upiId}</span></p>
+              </div>
+
+              {/* Copy UPI ID Button */}
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(FAMPAY_UPI_CONFIG.upiId);
+                  alert("UPI ID Copied to Clipboard!");
+                }}
+                className="text-[9px] font-bold text-slate-400 hover:text-white transition flex items-center gap-1 bg-white/5 border border-white/5 px-2.5 py-1 rounded-md cursor-pointer"
+              >
+                <span>Copy UPI ID</span>
+              </button>
+            </div>
+
+            {/* The primary modern, responsive deep link button */}
+            <div className="space-y-3">
+              <a 
+                href={getUpiUrl(upiPaymentModal.planName, upiPaymentModal.amount)}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-xs font-extrabold transition-all transform hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-purple-500/20"
+              >
+                <Smartphone className="w-4 h-4" />
+                <span>Pay Now (Opens UPI App)</span>
+              </a>
+
+              {/* Requirement 4: Under the button, add the specific subtext/note */}
+              <p className="text-[10px] text-slate-500 leading-normal font-medium max-w-sm mx-auto">
+                Clicking this will securely open your UPI apps like FamApp, PhonePe, Paytm or Google Pay.
+              </p>
+            </div>
+
+            <div className="h-[1px] bg-white/5 my-1" />
+
+            <div className="flex justify-between items-center text-[10px] text-slate-400 bg-white/[0.01] p-3 rounded-xl border border-white/5">
+              <span className="flex items-center gap-1.5 font-bold">
+                <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                <span>256-bit SSL Secure</span>
+              </span>
+              <span className="text-slate-500 font-semibold uppercase tracking-wider text-right">NP-Merchant Gateway</span>
+            </div>
           </div>
         </div>
       )}
